@@ -62,3 +62,20 @@ export const checkoutSessions = pgTable("checkout_sessions", {
     .notNull(),
 });
 // cascade = “delete children when parent is deleted”; restrict = “don’t delete the parent if any child still points at it.”
+
+export const orders = pgTable("orders", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  status: text("status").$type<OrderStatus>().notNull().default("pending"),
+  polarCheckoutId: text("polar_checkout_id"),
+  polarOrderId: text("polar_order_id").unique(),
+  totalCents: integer("total_cents").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
