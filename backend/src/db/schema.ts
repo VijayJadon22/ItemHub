@@ -12,6 +12,12 @@ import { relations } from "drizzle-orm";
 export type OrderStatus = "pending" | "paid" | "failed";
 export type UserRole = "customer" | "support" | "admin";
 
+export type CheckoutSessionLine = {
+  productId: string;
+  quantity: number;
+  unitPriceCents: number;
+};
+
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   clerkUserId: text("clerk_user_id").notNull().unique(),
@@ -41,3 +47,18 @@ export const products = pgTable("products", {
     .notNull()
     .defaultNow(),
 });
+
+export const checkoutSessions = pgTable("checkout_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  polarCheckoutId: text("polar_checkout_id").unique(),
+  lines: jsonb("lines").$type<CheckoutSessionLine[]>().notNull(),
+  totalCents: integer("total_cents").notNull(),
+  currency: text("currency").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+// cascade = “delete children when parent is deleted”; restrict = “don’t delete the parent if any child still points at it.”
